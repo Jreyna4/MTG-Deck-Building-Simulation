@@ -1,5 +1,6 @@
 """Command-line interface.
 
+    python -m mtgsim                      (no command: opens the window)
     python -m mtgsim analyze decks/my_deck.txt
     python -m mtgsim mulligan decks/my_deck.txt --hand "Forest; Island; Sol Ring; ..."
     python -m mtgsim combos decks/my_deck.txt
@@ -157,9 +158,26 @@ def cmd_matchup(args):
     _dump(args, out)
 
 
+def cmd_gui(args):
+    try:
+        import tkinter  # noqa: F401
+    except ImportError:
+        raise SystemExit("The window needs tkinter, which this Python doesn't have.\n"
+                         "  Windows/Mac: install Python from python.org (tkinter is included).\n"
+                         "  Linux: install the python3-tk package (for example: sudo apt install python3-tk).\n"
+                         "The command line still works: python -m mtgsim --help")
+    from .gui import main as gui_main
+    gui_main()
+
+
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="mtgsim", description="Commander deck simulator")
+    argv = sys.argv[1:] if argv is None else argv
+    if not argv:
+        return cmd_gui(None)
+    p = argparse.ArgumentParser(prog="mtgsim", description="Commander deck simulator. "
+                                "Run it with no command to open the window.")
     sub = p.add_subparsers(dest="command", required=True)
+    sub.add_parser("gui", help="open the window").set_defaults(func=cmd_gui)
 
     def common(sp):
         sp.add_argument("deck", help="deck list file (Moxfield/Archidekt/Arena text export)")

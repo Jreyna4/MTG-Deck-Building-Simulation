@@ -19,6 +19,9 @@ dev = ["pytest>=7"]
 [project.scripts]
 mtgsim = "mtgsim.cli:main"
 
+[project.gui-scripts]
+mtgsim-gui = "mtgsim.gui:main"
+
 [tool.setuptools]
 packages = ["mtgsim"]
 

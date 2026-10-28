@@ -2,7 +2,8 @@
 
 A Commander (EDH) deck simulator. Give it a deck list and it will:
 
-1. **Read the deck** and pull every card's data from [Scryfall](https://scryfall.com).
+1. **Read the deck** (paste a Moxfield export, or any text deck list) and pull every card's data from
+   [Scryfall](https://scryfall.com).
 2. **Tag each card's role**: ramp, draw, removal, board wipes, counterspells, and defense tags such as
    attack taxes (Propaganda, Ghostly Prison), damage prevention, fogs and goad.
 3. **Work out opening-hand stats**: land counts, the chance to have each role by each turn, and which cards
@@ -29,7 +30,8 @@ including an Android app.
    git clone https://github.com/Jreyna4/MTG-Deck-Building-Simulation.git
    cd MTG-Deck-Building-Simulation
    ```
-3. **Install the extras** (only needed for the app and the tests):
+3. That's all you need for the window and the command line. The extras below are only for the optional
+   web app and the tests:
    ```
    pip install -r requirements.txt
    ```
@@ -39,6 +41,41 @@ The first time you load a deck, card data is downloaded from Scryfall and saved 
 `~/.mtgsim/card_cache.json` (your home folder), so later runs are fast and work offline.
 
 ## Using it
+
+### The window (easiest)
+
+* **Windows:** double-click `start_gui.pyw` in the project folder.
+* **Any computer:** open a terminal in the project folder and run `python -m mtgsim` (`python3` on Mac/Linux).
+
+A simple black-and-white window opens with every option down the left side. Click one or press its key:
+
+| Key | Option |
+| --- | --- |
+| `I` | Import a deck (paste a list, open a `.txt` file, or use the example Kros deck) |
+| `R` / `C` | Reopen the last deck / choose or change the commander |
+| `1` | Deck & roles |
+| `2` | Card tags, with a quick defense estimate per card |
+| `3` | Opening hands: land odds, role odds by turn, best and worst opening-hand cards |
+| `4` | Mulligan advisor: pick the 7 cards you drew, get keep or mulligan |
+| `5` | Combos from Commander Spellbook |
+| `6` | Matchup against practice decks or friends' decks, optionally scoring every card |
+| `S` / `X` / `Q` | Save what's shown to a text file / stop a long simulation / quit |
+
+Long simulations run in the background, and the status line at the bottom shows progress.
+
+### Importing from Moxfield
+
+1. On Moxfield, open your deck and choose **More → Export**.
+2. Copy the **plain text**.
+3. In the window press **I** and click **Paste from clipboard** (or press Ctrl+V in the box), then **Import**.
+
+If the list doesn't say which card is the commander, the program uses a legendary creature that sits on its own
+at the end of the list, or asks you to pick one.
+
+Pasting a Moxfield *link* only works with Moxfield's permission. Moxfield doesn't offer a public API, and its terms
+don't allow other programs to download decks without one. If Moxfield support (support@moxfield.com) gives you an
+approved API user agent, enter it under **Moxfield settings** in the import window (or set the
+`MTGSIM_MOXFIELD_USER_AGENT` environment variable) and deck links will import directly.
 
 ### Your deck list
 
@@ -56,13 +93,13 @@ COMMANDER:
 Or pass `--commander "Card Name"`. Set codes, collector numbers and foil markers are fine.
 `decks/kros_pillow_fort_v5.txt` is included as an example.
 
-### The app
+### The web app (optional)
 
 ```
 streamlit run app.py
 ```
 
-A page opens in your browser. Paste a deck list in the sidebar and use the tabs: **Deck & roles**,
+This needs `pip install -r requirements.txt` first. A page opens in your browser. Paste a deck list in the sidebar and use the tabs: **Deck & roles**,
 **Opening hands**, **Mulligan advisor**, **Combos** and **Matchup**.
 
 ### The command line
@@ -101,7 +138,10 @@ Useful `matchup` options:
 
 | File | Job |
 | --- | --- |
+| `mtgsim/gui.py` | The black-and-white window |
 | `mtgsim/deck.py` | Reads deck list text |
+| `mtgsim/moxfield.py` | Moxfield import (exported text; links with Moxfield's permission) |
+| `mtgsim/settings.py` | Saved settings and the last deck you loaded |
 | `mtgsim/scryfall.py` | Downloads card data (75 cards per request) and caches it |
 | `mtgsim/tagger.py` | Reads each card's rules text and tags its roles |
 | `mtgsim/engine.py` | A simplified multiplayer game: lands, ramp, casting, combat, taxes, goad, removal... |
@@ -113,6 +153,9 @@ Useful `matchup` options:
 | `mtgsim/archetypes.py` | Built-in practice opponents (tokens, stompy, voltron) |
 | `mtgsim/matchup.py` | Matchup games and card-impact (defense) scores |
 | `mtgsim/cli.py`, `app.py` | Command line and web app |
+
+Saved files (card data cache, combo lookups, settings, last deck) live in `.mtgsim` in your home folder, or the
+folder named by the `MTGSIM_HOME` environment variable.
 
 **Goldfish score.** The mana you put to use in turns 1-5: mana spent on spells plus mana held up for instants
 you're holding. A smooth hand scores higher.
@@ -147,12 +190,14 @@ games where you drew the card, it reports damage saved, change in survival rate 
 python -m pytest
 ```
 
-The tests use built-in cards, so they don't need the internet.
+The tests use built-in cards, so they don't need the internet. The window test is skipped automatically when
+there's no screen (for example on a server).
 
 ## Roadmap
 
 * Full-rules deck vs deck by driving [Forge](https://github.com/Card-Forge/forge)'s command-line simulation mode.
 * Smarter AI and a stronger learning model (for example a neural network for mulligans or attack decisions).
+* A Windows `.exe` of the window (for example with PyInstaller), so Python doesn't need to be installed.
 * Android app. The core uses only the Python standard library, so it can be packaged with
   [BeeWare](https://beeware.org) or Kivy, or run behind a small web API that a phone app calls.
 
