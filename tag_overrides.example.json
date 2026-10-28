@@ -1,0 +1,9 @@
+{
+  "Simic Ascendancy": {
+    "remove": ["wincon"]
+  },
+  "Reins of Power": {
+    "add": ["fog"],
+    "params": {"fog": true}
+  }
+}

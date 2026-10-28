@@ -1,0 +1,4 @@
+# The simulator itself only needs Python 3.10+ (no extra packages).
+# These are for the optional web app and the tests:
+streamlit>=1.50
+pytest>=7

@@ -1,0 +1,74 @@
+1 As Foretold (WHO) 805 *F*
+1 Aurification (ONS) 6
+1 Authority of the Consuls (FIC) 232
+1 Aven Mimeomancer (ARB) 2
+1 Boon of Safety (SNC) 4
+1 Chronomantic Escape (FUT) 4
+1 Clockspinning (TSP) 53
+1 Contentious Plan (WAR) 46
+1 Contractual Safeguard (NCC) 14
+1 Counterspell (CMM) 630
+1 Crack in Time (WHO) 336
+1 Cultivate (FIC) 300
+1 Delaying Shield (ODY) 17
+1 Deserted Beach (FRA) 176
+1 Esper Sentinel (MH2) 328
+1 Estrid's Invocation (SLD) 1325 *F*
+1 Evolution Sage (PLST) WAR-159
+1 Experimental Augury (PLST) ONE-49
+1 Faramir, Prince of Ithilien (LTR) 202
+1 Farseek (MSC) 173
+1 Fertilid (NEC) 116
+10 Forest (WAR) 262
+1 Forgotten Ancient (FIC) 304
+1 Generous Patron (FIC) 305
+1 Ghostly Prison (PLST) CHK-10
+1 Gwafa Hazid, Profiteer (C16) 202
+1 Hylda of the Icy Crown (WOE) 206
+1 Imprisoned in the Moon (INR) 69
+1 Inexorable Tide (FIC) 265 *F*
+11 Island (THS) 237
+1 Karn's Bastion (EOC) 163
+1 Land Tax (WOT) 9 *F*
+1 Lavinia, Azorius Renegade (PRM) 71588
+1 Lulu, Stern Guardian (FIC) 38
+1 Merfolk Skydiver (WAR) 205
+1 Nature's Lore (FIC) 311
+1 Nesting Grounds (FIC) 408
+1 Nils, Discipline Enforcer (SOC) 158
+1 Palliation Accord (DIS) 122
+1 Patrolling Peacemaker (EOC) 5
+1 Pia, Aether Ascetic (FRA) 264
+1 Pick Your Poison (MKM) 170
+10 Plains (MSH) 434 *F*
+1 Promise of Loyalty (SOC) 161
+1 Propaganda (ACR) 195 *E*
+1 Protection Magic (FIC) 24
+1 Rampant Growth (PLST) MIR-235
+1 Reins of Power (C15) 103
+1 Requisition Raid (OTJ) 26
+1 Resourceful Defense (FIC) 251
+1 Rikku, Resourceful Guardian (FIC) 41
+1 Ripples of Potential (EOC) 77
+1 Sharae of Numbing Depths (WOE) 213
+1 Simic Ascendancy (PRNA) 207s *F*
+1 Sol Ring (FDC) 286
+1 Sphere of Safety (C16) 77
+1 Split Up (DSK) 304 *F*
+1 Swords to Plowshares (FRC) 37
+1 Talisman of Curiosity (SOC) 430 *F*
+1 Thaumatic Compass / Spires of Orazca (XLN) 249
+1 Thrummingbird (C16) 100
+1 Tidus, Yuna's Guardian
+1 Tolarian Contempt (MAT) 108 *E*
+1 Unnatural Restoration
+1 Valorous Stance (GN3) 20
+1 Verity Circle (RNA) 58
+1 Viral Drake
+1 Virtue of Loyalty / Ardenvale Fealty (WOE) 277 *F*
+1 Wheel of Sun and Moon (PLST) SHM-243
+1 Willbreaker (ORI) 84
+1 Yenna, Redtooth Regent (WOE) 219
+
+COMMANDER:
+1 Kros, Defense Contractor (NCC) 7 *F*
