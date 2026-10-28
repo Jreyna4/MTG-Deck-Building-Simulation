@@ -50,7 +50,28 @@ class Deck:
     commanders: list = field(default_factory=list)
     main: list = field(default_factory=list)
     sideboard: list = field(default_factory=list)
-    warnings: list = field(default_factory=list)
+    notes: list = field(default_factory=list)
+    # Groups of 1-2 cards set apart by blank lines at the start or end of the list. Some exports
+    # (MTGO style) put the commander there without a label; the loader checks them.
+    edge_blocks: list = field(default_factory=list)
+
+    @property
+    def warnings(self) -> list:
+        out = list(self.notes)
+        if not self.commanders:
+            out.append("No commander found. Add a 'COMMANDER:' line above it, or choose one.")
+        elif self.total_count != 100:
+            out.append(f"Deck has {self.total_count} cards including the commander (Commander decks have 100).")
+        return out
+
+    def to_text(self) -> str:
+        """The deck as plain deck-list text (the same format this program reads)."""
+        lines = [f"{e.quantity} {e.name}" for e in self.main]
+        if self.sideboard:
+            lines += ["", "SIDEBOARD:"] + [f"{e.quantity} {e.name}" for e in self.sideboard]
+        if self.commanders:
+            lines += ["", "COMMANDER:"] + [f"{e.quantity} {e.name}" for e in self.commanders]
+        return "\n".join(lines) + "\n"
 
     @property
     def main_count(self) -> int:
@@ -76,6 +97,20 @@ class Deck:
                 return
         if not any(c.lookup_name.lower() == key for c in self.commanders):
             self.commanders.append(DeckEntry(name.strip()))
+
+
+    def change_commanders(self, names: list) -> None:
+        """Make ``names`` the commander(s), moving any current commander back into the deck."""
+        for old in self.commanders:
+            match = next((e for e in self.main if e.lookup_name.lower() == old.lookup_name.lower()), None)
+            if match:
+                match.quantity += old.quantity
+            else:
+                self.main.append(old)
+        self.commanders = []
+        for n in names:
+            self.set_commander(n)
+        self.notes = [n for n in self.notes if not n.startswith("The list didn't mark a commander")]
 
 
 def _section_of(line: str) -> str | None:
@@ -114,12 +149,21 @@ def parse_deck(text: str, name: str | None = None, commander: str | list | None 
     deck = Deck(name=name or "Deck")
     section = "main"
     seen: dict = {}
+    blocks: list = []  # (main-deck entries, came after a section header) per blank-line group
+    current: list = []
+    current_header = False
     for raw in text.splitlines():
         line = raw.strip()
         if not line:
+            if current:
+                blocks.append((current, current_header))
+            current, current_header = [], False
             continue
         sec = _section_of(line)
         if sec:
+            if current:
+                blocks.append((current, current_header))
+            current, current_header = [], True
             section = sec
             continue
         if section == "about":
@@ -130,7 +174,7 @@ def parse_deck(text: str, name: str | None = None, commander: str | list | None 
             continue
         parsed = parse_line(line)
         if not parsed:
-            deck.warnings.append(f"Couldn't read line: {line!r}")
+            deck.notes.append(f"Couldn't read line: {line!r}")
             continue
         entry, is_cmdr = parsed
         target = "commander" if is_cmdr else section
@@ -142,13 +186,17 @@ def parse_deck(text: str, name: str | None = None, commander: str | list | None 
             continue
         seen[key] = entry
         {"commander": deck.commanders, "main": deck.main, "sideboard": deck.sideboard}[target].append(entry)
+        if target == "main":
+            current.append(entry)
+    if current:
+        blocks.append((current, current_header))
+    if len(blocks) >= 2:
+        for entries, header in (blocks[-1], blocks[0]):
+            if not header and 1 <= len(entries) <= 2 and sum(e.quantity for e in entries) <= 2:
+                deck.edge_blocks.append(entries)
     if commander:
         for c in [commander] if isinstance(commander, str) else commander:
             deck.set_commander(c)
-    if not deck.commanders:
-        deck.warnings.append("No commander found. Add a 'COMMANDER:' line above it, or pass commander=...")
-    if deck.commanders and deck.total_count != 100:
-        deck.warnings.append(f"Deck has {deck.total_count} cards including the commander (Commander decks have 100).")
     return deck
 
 

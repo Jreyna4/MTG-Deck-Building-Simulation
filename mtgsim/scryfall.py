@@ -6,13 +6,13 @@ cache so later runs work offline and don't hit Scryfall again.
 from __future__ import annotations
 
 import json
-import os
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from . import settings
 from .cards import Card
 
 API = "https://api.scryfall.com"
@@ -32,8 +32,7 @@ class ScryfallError(RuntimeError):
 
 
 def default_cache_path() -> Path:
-    base = os.environ.get("MTGSIM_HOME") or (Path.home() / ".mtgsim")
-    return Path(base) / "card_cache.json"
+    return settings.home() / "card_cache.json"
 
 
 def _trim(card: dict) -> dict:

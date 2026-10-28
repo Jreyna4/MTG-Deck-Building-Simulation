@@ -42,11 +42,17 @@ class LoadedDeck:
     def land_count(self) -> int:
         return sum(1 for c in self.cards if c.is_land)
 
+    def commander_candidates(self) -> list:
+        """Cards in the deck that could be its commander (legendary creatures and the like)."""
+        return [c for c, _ in self.unique() if c.can_be_commander]
+
 
 def build_loaded_deck(deck: Deck, cache: CardCache | None = None, offline: bool = False,
                       overrides_path: str | Path | None = None, progress=None) -> LoadedDeck:
     names = [e.lookup_name for e in deck.all_entries()]
     found, not_found = fetch_cards(names, cache=cache, offline=offline, progress=progress)
+    if not deck.commanders:
+        _guess_commander(deck, found)
     commanders = [found[e.lookup_name] for e in deck.commanders if e.lookup_name in found]
     identity = set()
     for c in commanders:
@@ -65,6 +71,19 @@ def build_loaded_deck(deck: Deck, cache: CardCache | None = None, offline: bool 
         if e.lookup_name in found:
             cards.extend([found[e.lookup_name]] * e.quantity)
     return LoadedDeck(deck=deck, commanders=commanders, cards=cards, colors=colors, not_found=not_found)
+
+
+def _guess_commander(deck: Deck, found: dict) -> None:
+    """If the list doesn't mark a commander, use a legendary creature that sits on its own at the
+    end (or start) of the list, which is where MTGO-style exports put it."""
+    for block in deck.edge_blocks:
+        cards = [found.get(e.lookup_name) for e in block]
+        if cards and all(c is not None and c.can_be_commander for c in cards):
+            for e in list(block):
+                deck.set_commander(e.name)
+            deck.notes.append("The list didn't mark a commander, so " + " and ".join(c.name for c in cards) +
+                              " (set apart at the end or start of the list) is used.")
+            return
 
 
 def load(path_or_text: str | Path, commander: str | None = None, cache_path: str | Path | None = None,

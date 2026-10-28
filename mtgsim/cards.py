@@ -151,6 +151,10 @@ class Card:
         return self._is("Legendary")
 
     @property
+    def can_be_commander(self) -> bool:
+        return (self.is_legendary and self.is_creature) or "can be your commander" in self.oracle_text.lower()
+
+    @property
     def is_permanent(self) -> bool:
         return not (self.is_instant or self.is_sorcery)
 

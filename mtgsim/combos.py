@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import time
 import urllib.error
 import urllib.request
 from collections import Counter
 from pathlib import Path
+
+from . import settings
 
 API = "https://backend.commanderspellbook.com/find-my-combos"
 COMBO_URL = "https://commanderspellbook.com/combo/{id}/"
@@ -62,8 +63,7 @@ def _variant(v: dict, deck_names: set) -> dict:
 
 
 def _cache_dir() -> Path:
-    base = os.environ.get("MTGSIM_HOME") or (Path.home() / ".mtgsim")
-    return Path(base) / "combos"
+    return settings.home() / "combos"
 
 
 def _post(body: dict, timeout: float) -> dict:
