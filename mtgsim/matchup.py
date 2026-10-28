@@ -14,6 +14,10 @@ from .cards import Card
 from .engine import Game
 
 
+class Stopped(Exception):
+    """Raised when a simulation is stopped early (the window's Stop button)."""
+
+
 def _entry(deck):
     return (deck.name, deck.cards, deck.commanders, deck.colors)
 
@@ -23,15 +27,19 @@ def _blank_like(card: Card) -> Card:
 
 
 def play_games(you, opponents: list, games: int = 200, seed: int = 1, max_rounds: int = 15,
-               combos: list | None = None, swap: dict | None = None, your_mulligan=None) -> list:
+               combos: list | None = None, swap: dict | None = None, your_mulligan=None,
+               should_stop=None) -> list:
     """Play ``games`` games and return one result dict per game, from your point of view.
-    ``swap`` replaces cards in your deck by name (used for ablation)."""
+    ``swap`` replaces cards in your deck by name (used for ablation). ``should_stop`` is checked
+    before each game; if it returns True, ``Stopped`` is raised."""
     cards = you.cards
     if swap:
         cards = [swap.get(c.name, c) for c in cards]
     decks = [(you.name, cards, you.commanders, you.colors)] + [_entry(o) for o in opponents]
     out = []
     for i in range(games):
+        if should_stop and should_stop():
+            raise Stopped()
         g = Game(decks, seed=seed * 1_000_003 + i, max_rounds=max_rounds, combos=combos,
                  policies={0: your_mulligan} if your_mulligan else None)
         g.run()
@@ -83,8 +91,9 @@ def summarize(results: list, n_opponents: int) -> dict:
 
 
 def run_matchup(you, opponents: list, games: int = 200, seed: int = 1, max_rounds: int = 15,
-                combos: list | None = None, your_mulligan=None) -> dict:
-    results = play_games(you, opponents, games, seed, max_rounds, combos, your_mulligan=your_mulligan)
+                combos: list | None = None, your_mulligan=None, should_stop=None) -> dict:
+    results = play_games(you, opponents, games, seed, max_rounds, combos, your_mulligan=your_mulligan,
+                         should_stop=should_stop)
     summary = summarize(results, len(opponents))
     summary["opponents"] = [o.name for o in opponents]
     summary["outcomes"] = {(f"{opponents[int(k.split()[1]) - 1].name} won" if k.startswith("opponent ") else k): v
@@ -125,7 +134,7 @@ def _ablate(args):
 
 def card_impact(you, opponents: list, cards: list | None = None, games: int = 150, seed: int = 1,
                 max_rounds: int = 15, combos: list | None = None, progress=None, your_mulligan=None,
-                workers: int = 1) -> dict:
+                workers: int = 1, should_stop=None) -> dict:
     """Measure each card by replaying the same games with it blanked out.
 
     Each card gets three numbers, measured over the games where you drew it:
@@ -135,24 +144,38 @@ def card_impact(you, opponents: list, cards: list | None = None, games: int = 15
     The "_noise" values are one standard error; differences smaller than about twice the noise
     could be luck. More games shrink the noise.
     """
-    base = play_games(you, opponents, games, seed, max_rounds, combos, your_mulligan=your_mulligan)
+    base = play_games(you, opponents, games, seed, max_rounds, combos, your_mulligan=your_mulligan,
+                      should_stop=should_stop)
     base_sum = summarize(base, len(opponents))
     if cards is None:
         cards = [c.name for c, _ in you.unique() if not c.is_land]
     cards = [n for n in cards if any(c.name == n for c in you.cards)]
     jobs = [(you, opponents, n, games, seed, max_rounds, combos, your_mulligan) for n in cards]
     results = {}
-    if workers > 1:
-        from concurrent.futures import ProcessPoolExecutor
-        with ProcessPoolExecutor(workers) as ex:
-            for i, (name, alt) in enumerate(ex.map(_ablate, jobs)):
-                results[name] = alt
-                if progress:
-                    progress(i + 1, len(cards), name)
+    if workers > 1 and len(jobs) > 1:
+        import multiprocessing
+        from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
+        # "spawn" works the same on Windows, Mac and Linux, and is safe to start from a window's thread
+        ex = ProcessPoolExecutor(min(workers, len(jobs)), mp_context=multiprocessing.get_context("spawn"))
+        try:
+            pending = {ex.submit(_ablate, job) for job in jobs}
+            while pending:
+                done, pending = wait(pending, timeout=0.5, return_when=FIRST_COMPLETED)
+                for fut in done:
+                    name, alt = fut.result()
+                    results[name] = alt
+                    if progress:
+                        progress(len(results), len(cards), name)
+                if should_stop and should_stop():
+                    raise Stopped()
+        finally:
+            ex.shutdown(wait=not (should_stop and should_stop()), cancel_futures=True)
     else:
         for i, job in enumerate(jobs):
             if progress:
                 progress(i + 1, len(cards), job[2])
+            if should_stop and should_stop():
+                raise Stopped()
             name, alt = _ablate(job)
             results[name] = alt
     rows = []
